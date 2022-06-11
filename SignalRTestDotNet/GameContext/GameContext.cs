@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace SignalRTestDotNet.GameContext;
+namespace SignalRTestDotNet.GameContextNs;
 
 
 public class GameContext : DbContext
@@ -11,43 +11,54 @@ public class GameContext : DbContext
     public DbSet<Player> Players { get; set; }
     public DbSet<Move> Moves { get; set; }
 
+    public GameContext(DbContextOptions<GameContext> options) : base(options) { }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=my_host;Database=my_db;Password=my_pw");
+        => optionsBuilder.UseNpgsql("Host=localhost:5432;Username=myusername;Password=mypassword;Database=myusername");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder){
+        modelBuilder.Entity<Session>().ToTable("Session");
+        modelBuilder.Entity<Game>().ToTable("Game");
+        modelBuilder.Entity<Player>().ToTable("Player");
+        modelBuilder.Entity<Move>().ToTable("Move");
+    }
 
 }
 
 public record Session
 {
-    string AdminId { get; init; }
-    string SessionId { get; init; }
+    public string AdminId { get; init; }
+    public string SessionId { get; init; }
 }
 
 public record Game
 {
-    int CurrentTurn { get; init; }
-    List<int> PlayedTurns { get; init; }
+    public string GameId { get; init; }
+    public int CurrentTurn { get; init; }
+    public List<int> PlayedTurns { get; init; }
 
-    Session Session { get; init; }
-    string SessionId { get; init; }
+    public Session Session { get; init; }
+    public string SessionId { get; init; }
 }
 
 public record Player
 {
-    string PlayerId { get; init; }
+    public string PlayerId { get; init; }
 
-    Session Session { get; init; }
-    string SessionId { get; init; }
+    public Session Session { get; init; }
+    public string SessionId { get; init; }
 }
 
 
 public record Move
 {
-    string Content { get; init; }
+    public string MoveId { get; init; }
+    public string Content { get; init; }
 
-    int Turn { get; init; }
+    public int Turn { get; init; }
 
-    Session session { get; init; }
-    string SessionId { get; init; }
+    public Session session { get; init; }
+    public string SessionId { get; init; }
 
 
 }

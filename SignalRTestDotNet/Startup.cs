@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SignalRTestDotNet.Hubs;
 using SignalRTestDotNet.Middleware;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace SignalRTestDotNet
 {
@@ -21,15 +23,18 @@ namespace SignalRTestDotNet
                 builder
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .SetIsOriginAllowed(host  => true)
+                    .SetIsOriginAllowed(host => true)
                     .AllowCredentials();
             }));
             services.AddSignalR();
+            services.AddDbContext<GameContextNs.GameContext>(options =>
+                    options.UseNpgsql("Host=localhost:5432;Username=myusername;Password=mypassword;Database=myusername"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
