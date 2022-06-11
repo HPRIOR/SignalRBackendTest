@@ -46,7 +46,6 @@ public record Game
 public record Player
 {
     public string PlayerId { get; init; }
-
     public Session Session { get; init; }
     public string SessionId { get; init; }
 }
