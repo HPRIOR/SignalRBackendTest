@@ -18,8 +18,6 @@ namespace SignalRTestDotNet.Hubs
         public async Task NewMessage(long username, string message)
         {
 
-            _gameContext.Add(new Session { AdminId = "admin", SessionId = "b" });
-            _gameContext.Add(new Player { PlayerId = "a", SessionId = "b" });
             System.Console.WriteLine("adding to db");
             await Clients.All.SendAsync("messageReceived", username, message);
         }

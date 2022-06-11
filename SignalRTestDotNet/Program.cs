@@ -39,12 +39,14 @@ namespace SignalRTestDotNet
                     var context = services.GetRequiredService<GameContext>();
                     context.Database.EnsureCreated();
                     context.Sessions.Add(new Session{AdminId="something", SessionId="sessionId"});
+                    context.Players.Add(new Player{PlayerId="playerId", SessionId="sessionId"});
+                    context.Countries.Add(new Country{CountryId="franceId", PlayerId="playerId", CountryName="france"});
                     context.SaveChanges();
 
                 }
-                catch (Exception _)
+                catch (Exception e)
                 {
-                    Console.WriteLine("An error occurred creating the DB.");
+                    Console.WriteLine($"An error occurred creating the DB: {e}");
                 }
             }
         }

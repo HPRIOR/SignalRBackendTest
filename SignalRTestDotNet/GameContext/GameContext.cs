@@ -10,6 +10,7 @@ public class GameContext : DbContext
     public DbSet<Game> Games { get; set; }
     public DbSet<Player> Players { get; set; }
     public DbSet<Move> Moves { get; set; }
+    public DbSet<Country> Countries { get; set; }
 
     public GameContext(DbContextOptions<GameContext> options) : base(options) { }
 
@@ -21,6 +22,7 @@ public class GameContext : DbContext
         modelBuilder.Entity<Game>().ToTable("Game");
         modelBuilder.Entity<Player>().ToTable("Player");
         modelBuilder.Entity<Move>().ToTable("Move");
+        modelBuilder.Entity<Country>().ToTable("Country");
     }
 
 }
@@ -60,6 +62,14 @@ public record Move
     public Session session { get; init; }
     public string SessionId { get; init; }
 
+}
 
+public record Country
+{
+    public string CountryId {get; init;}
+    public string CountryName {get; init;}
+
+    public Player player {get; init;}
+    public string PlayerId {get; init;}
 }
 
