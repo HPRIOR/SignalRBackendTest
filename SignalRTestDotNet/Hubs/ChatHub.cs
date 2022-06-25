@@ -4,29 +4,15 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using SignalRTestDotNet.GameContextNs;
-using Newtonsoft.Json;
+using SignalRTestDotNet.DOAs;
+using SignalRTestDotNet.Extensions;
 
 namespace SignalRTestDotNet.Hubs;
-
-public record PlayerDAO
-{
-    [JsonProperty("country")]
-    public string Country { get; init; }
-
-    [JsonProperty("url")]
-    public string Url { get; init; }
-
-    [JsonProperty("sessionId")]
-    public string SessionId { get; init; }
-
-    [JsonProperty("playerId")]
-    public string PlayerId { get; init; }
-}
-
 
 public class ChatHub : Hub
 {
     private readonly GameContext _gameContext;
+
     // will get from config in the real thing
     private const string _clientUrl = "http://localhost:8080/";
 
@@ -37,39 +23,60 @@ public class ChatHub : Hub
 
     public async Task NewMessage(long username, string message)
     {
-
-        System.Console.WriteLine("adding to db");
+        Console.WriteLine("adding to db");
         await Clients.All.SendAsync("messageReceived", username, message);
     }
 
-    public async Task AddPlayers(List<string> countries, string sessionId, string AdminId)
+    public async Task AddPlayers(List<string> countries, string sessionId, string adminId)
     {
-        // should accces through a repository interface in real thing
+        // should accessed through a repository interface in real thing
         // check if session and admin exist and are valid 
-        var session = await _gameContext.FindAsync(typeof(Session), "sessionId");
+
+        var session = await _gameContext.FindAsync<Session>(sessionId);
+
+        if (session is null || session.AdminId != adminId)
+        {
+            // Return some error back to client
+            return;
+        }
 
         // get player DAO
-        
+        var playerDaOs = countries
+            .Select(country =>
+            {
+                var playerId = Guid.NewGuid().ToString();
 
+                return new PlayerDAO
+                {
+                    Url = _clientUrl + "?session=" + sessionId + "&player=" + playerId,
+                    Country = country,
+                    SessionId = sessionId,
+                    PlayerId = playerId
+                };
+            }).ToList(); // needs to list otherwise will be lazily evaluated and GUID diff each time!
+        //
         // save player information in db
-
+        var players = playerDaOs.Select(playerDao => playerDao.AsPlayer());
+        _gameContext.AddRange(players);
+        await _gameContext.SaveChangesAsync();
 
 
         // send back DAO:
-        var players = countries.Select(country =>
-        {
-            var playerId = Guid.NewGuid().ToString();
-
-            return new PlayerDAO
-            {
-                Url = _clientUrl + "?session=" + sessionId + "&player=" + playerId,
-                Country = country,
-                SessionId = sessionId,
-                PlayerId = playerId
-            };
-        });
-        await Clients.Caller.SendAsync("playersAdded", players);
+        await Clients.Caller.SendAsync("playersAdded", playerDaOs);
     }
 
+    public async Task VerifyPlayerSession(string sessionId, string playerId)
+    {
+        var session = await _gameContext.FindAsync<Session>(sessionId);
+        var player = await _gameContext.FindAsync<Player>(playerId);
+        Console.WriteLine(session);
+        Console.WriteLine(player);
+        if (session is null || player is null || session.SessionId != player.PlayerId)
+        {
+            await Clients.Caller.SendAsync("verifiedPlayerSession", false);
+            return;
+        }
 
+        await Clients.Caller.SendAsync("verifiedPlayerSession", true);
+    }
 }

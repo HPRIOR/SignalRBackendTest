@@ -10,19 +10,18 @@ public class GameContext : DbContext
     public DbSet<Game> Games { get; set; }
     public DbSet<Player> Players { get; set; }
     public DbSet<Move> Moves { get; set; }
-    public DbSet<Country> Countries { get; set; }
 
     public GameContext(DbContextOptions<GameContext> options) : base(options) { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("Host=localhost:5432;Username=myusername;Password=mypassword;Database=myusername");
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder){
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Session>().ToTable("Session");
         modelBuilder.Entity<Game>().ToTable("Game");
         modelBuilder.Entity<Player>().ToTable("Player");
         modelBuilder.Entity<Move>().ToTable("Move");
-        modelBuilder.Entity<Country>().ToTable("Country");
     }
 
 }
@@ -46,6 +45,8 @@ public record Game
 public record Player
 {
     public string PlayerId { get; init; }
+    public string Country { get; init; }
+    public string Url { get; init; }
     public Session Session { get; init; }
     public string SessionId { get; init; }
 }
@@ -63,12 +64,4 @@ public record Move
 
 }
 
-public record Country
-{
-    public string CountryId {get; init;}
-    public string CountryName {get; init;}
-
-    public Player player {get; init;}
-    public string PlayerId {get; init;}
-}
 

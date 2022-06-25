@@ -39,8 +39,6 @@ public class AdminStartMiddleware
             context.Response.Cookies.Append("AdminId", adminId);
             context.Response.Cookies.Append("SessionId", sessionId);
 
-
-
         }
 
         await _next(context);

@@ -2,14 +2,6 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using SignalRTestDotNet.GameContextNs;
 
 namespace SignalRTestDotNet
@@ -39,8 +31,7 @@ namespace SignalRTestDotNet
                     var context = services.GetRequiredService<GameContext>();
                     context.Database.EnsureCreated();
                     context.Sessions.Add(new Session{AdminId="something", SessionId="sessionId"});
-                    context.Players.Add(new Player{PlayerId="playerId", SessionId="sessionId"});
-                    context.Countries.Add(new Country{CountryId="franceId", PlayerId="playerId", CountryName="france"});
+                    context.Players.Add(new Player{PlayerId="playerId", SessionId="sessionId", Url="someurl", Country="france"});
                     context.SaveChanges();
 
                 }
