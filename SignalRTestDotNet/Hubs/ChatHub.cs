@@ -27,6 +27,28 @@ public class ChatHub : Hub
         await Clients.All.SendAsync("messageReceived", username, message);
     }
 
+    /*
+     * Groups will be associated with sessionIds.  Only admins will be able to send messages to the group
+     * by using their admin id.
+     */
+    public async Task SendMessageToGroup(string adminId, string message)
+    {
+
+    }
+
+    public async Task SendMessageToAdmin(string sessionId, string message){
+
+    }
+
+    public async Task Debug(){
+        Console.WriteLine("Debug");
+        Console.WriteLine(Context.ConnectionId);
+        var identity = new System.Security.Claims.ClaimsIdentity("hello");
+        Console.WriteLine(Context.User.AddIdentity(identity));
+    }
+
+
+
     public async Task AddPlayers(List<string> countries, string sessionId, string adminId)
     {
         // should accessed through a repository interface in real thing
@@ -53,8 +75,8 @@ public class ChatHub : Hub
                     SessionId = sessionId,
                     PlayerId = playerId
                 };
-            }).ToList(); // needs to list otherwise will be lazily evaluated and GUID diff each time!
-        //
+            }).ToList();
+
         // save player information in db
         var players = playerDaOs.Select(playerDao => playerDao.AsPlayer());
         _gameContext.AddRange(players);
@@ -69,14 +91,13 @@ public class ChatHub : Hub
     {
         var session = await _gameContext.FindAsync<Session>(sessionId);
         var player = await _gameContext.FindAsync<Player>(playerId);
-        Console.WriteLine(session);
-        Console.WriteLine(player);
-        if (session is null || player is null || session.SessionId != player.PlayerId)
+
+        if (session is null || player is null || session.SessionId != player.SessionId)
         {
             await Clients.Caller.SendAsync("verifiedPlayerSession", false);
             return;
         }
-
+        Console.WriteLine("player verified");
         await Clients.Caller.SendAsync("verifiedPlayerSession", true);
     }
 }

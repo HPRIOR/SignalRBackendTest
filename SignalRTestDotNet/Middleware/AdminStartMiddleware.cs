@@ -33,7 +33,6 @@ public class AdminStartMiddleware
             var session = new Session { AdminId = adminId, SessionId = sessionId };
             var sess = await gameContext.Sessions.AddAsync(session);
             await gameContext.SaveChangesAsync();
-            Console.WriteLine(session);
 
             // if database save successful return cookies to user
             context.Response.Cookies.Append("AdminId", adminId);
