@@ -36,15 +36,15 @@ public class ChatHub : Hub
 
     }
 
-    public async Task SendMessageToAdmin(string sessionId, string message){
+    public async Task SendMessageToAdmin(string sessionId, string message)
+    {
 
     }
 
-    public async Task Debug(){
-        Console.WriteLine("Debug");
-        Console.WriteLine(Context.ConnectionId);
-        var identity = new System.Security.Claims.ClaimsIdentity("hello");
-        Console.WriteLine(Context.User.AddIdentity(identity));
+    public async Task Debug()
+    {
+        Console.WriteLine("Debug:");
+        Console.WriteLine($"user id: {Context.UserIdentifier}");
     }
 
 
@@ -81,7 +81,6 @@ public class ChatHub : Hub
         var players = playerDaOs.Select(playerDao => playerDao.AsPlayer());
         _gameContext.AddRange(players);
         await _gameContext.SaveChangesAsync();
-
 
         // send back DAO:
         await Clients.Caller.SendAsync("playersAdded", playerDaOs);

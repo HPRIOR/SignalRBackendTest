@@ -27,6 +27,10 @@ namespace SignalRTestDotNet
                     .SetIsOriginAllowed(host => true)
                     .AllowCredentials();
             }));
+            services.AddAuthentication("CookieAuth").AddCookie("CookieAuth", options =>
+            {
+                options.Cookie.Name = "CookieAuth";
+            });
             services.AddSignalR();
             services.AddDbContext<GameContextNs.GameContext>(options =>
                     options.UseNpgsql("Host=localhost:5432;Username=myusername;Password=mypassword;Database=myusername"));
@@ -43,8 +47,9 @@ namespace SignalRTestDotNet
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseAuthorization();
+            app.UseAuthentication();
 
-            app.UseMiddleware<AdminStartMiddleware>();
+            app.UseMiddleware<UserConnectMiddleware>();
 
             app.UseCors();
 
