@@ -38,33 +38,40 @@ public class UserConnectMiddleware
      */
     public async Task InvokeAsync(HttpContext context, GameContext gameContext)
     {
-        var userId = Guid.NewGuid().ToString();
-        if (context.Request.Path == "/hub"
-                && !context.Request.Cookies.ContainsKey("AdminId")
-                && !context.Request.Cookies.ContainsKey("PlayerId"))
+        if (context.Request.Path == "/hub")
         {
-            var adminId = Guid.NewGuid().ToString();
-            var sessionId = Guid.NewGuid().ToString();
+            // handle admin connect request    
+            if (!context.Request.Cookies.ContainsKey("AdminId")
+                && !context.Request.Query.ContainsKey("player")
+                && !context.Request.Query.ContainsKey("session"))
+            {
 
-            // store in database
-            var session = new Session { AdminId = adminId, SessionId = sessionId };
-            var sess = await gameContext.Sessions.AddAsync(session);
-            await gameContext.SaveChangesAsync();
+                var adminId = Guid.NewGuid().ToString();
+                var sessionId = Guid.NewGuid().ToString();
 
-            // if database save successful return cookies to user
-            context.Response.Cookies.Append("AdminId", adminId);
-            context.Response.Cookies.Append("SessionId", sessionId);
+                // store in database                    
+                var session = new Session { AdminId = adminId, SessionId = sessionId };
+                var _ = await gameContext.Sessions.AddAsync(session);
+                await gameContext.SaveChangesAsync();
 
-            await AddUserClaims(userId,context);
+                // if database save successful return cookies to user
+                context.Response.Cookies.Append("AdminId", adminId);
+                context.Response.Cookies.Append("SessionId", sessionId);
+
+                await AddUserClaims(adminId, context);
+            }
+
+            // handle player join request
+            if (context.Request.Query.ContainsKey("player") 
+                    && context.Request.Query.ContainsKey("session"))
+            {
+                // Assign user claims to player guid
+                // So that use can be 
+                await AddUserClaims(context.Request.Query["player"], context);
+            }
 
         }
 
-        if (context.Request.Cookies.ContainsKey("PlayerId")
-                && !context.Request.Cookies.ContainsKey("CookieAuth"))
-        {
-            await AddUserClaims(userId, context);
-
-        }
 
         await _next(context);
     }

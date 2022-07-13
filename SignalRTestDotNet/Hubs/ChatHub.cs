@@ -43,8 +43,8 @@ public class ChatHub : Hub
 
     public async Task Debug()
     {
-        Console.WriteLine("Debug:");
-        Console.WriteLine($"user id: {Context.UserIdentifier}");
+        // Console.WriteLine("Debug:");
+        // Console.WriteLine($"user id: {Context.UserIdentifier}");
     }
 
 
