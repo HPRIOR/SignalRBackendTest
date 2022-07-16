@@ -2,12 +2,10 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using SignalRTestDotNet.GameContextNs;
 using SignalRTestDotNet.DOAs;
 using SignalRTestDotNet.Extensions;
-using Microsoft.AspNetCore.Http.Extensions;
 
 namespace SignalRTestDotNet.Hubs;
 
@@ -37,7 +35,7 @@ public class ChatHub : Hub
         }
 
         Console.WriteLine("player verified");
-        await Clients.Caller.SendAsync("verifiedSession", "player");
+        await Clients.Caller.SendAsync("verifiedSession", "Player");
     }
 
     private async Task VerifyAdminSession(String sessionId, string adminId, string userId)
@@ -47,7 +45,7 @@ public class ChatHub : Hub
             await AbortSessionWith("No matching user id for admin id");
             return;
         }
-        
+
         var session = await _gameContext.FindAsync<Session>(sessionId);
         if (session is null || session.AdminId != adminId)
         {
@@ -62,8 +60,6 @@ public class ChatHub : Hub
     {
         var playerQuery = Context.GetHttpContext()!.Request.Query["player"];
         var sessionQuery = Context.GetHttpContext()!.Request.Query["session"];
-        var adminCookie = Context.GetHttpContext()?.Request.Cookies["AdminId"];
-        var sessionCookie = Context.GetHttpContext()?.Request.Cookies["SessionId"];
         var userId = Context.UserIdentifier;
 
         var isPlayerSession = (!String.IsNullOrEmpty(sessionQuery) && !String.IsNullOrEmpty(sessionQuery));
@@ -74,6 +70,9 @@ public class ChatHub : Hub
         }
         else
         {
+
+            var adminCookie = Context.GetHttpContext()?.Request.Cookies["AdminId"];
+            var sessionCookie = Context.GetHttpContext()?.Request.Cookies["SessionId"];
             await VerifyAdminSession(sessionCookie, adminCookie, userId);
         }
 
@@ -101,23 +100,28 @@ public class ChatHub : Hub
      * Groups will be associated with sessionIds.  Only admins will be able to send messages to the group
      * by using their admin id.
      */
-    public async Task SendMessageToGroup(string adminId, string message)
+    public async Task SendMessageToGroup(string sessionId, string message)
     {
+        await Clients.Group(sessionId).SendAsync("SendMessage", message);
+    }
+
+    public async Task SendMessageToUser(string playerId, string message)
+    {
+        await Clients.User(playerId).SendAsync("SendMessage", message);
     }
 
     public async Task SendMessageToAdmin(string sessionId, string message)
     {
+        System.Console.WriteLine("message admin");
+        var session = await _gameContext.FindAsync<Session>(sessionId);
+        if (session is not null)
+        {
+            await Clients.User(session.AdminId).SendAsync("SendMessage", message);
+        }
     }
 
     public async Task Debug()
     {
-        var _1 = Context.GetHttpContext().Request.Cookies["AdminId"];
-        var _2 = Context.GetHttpContext().Request.Cookies["SessionId"];
-        var _3 = Context.GetHttpContext().Request.Cookies["Anything"];
-        var _ = Context.GetHttpContext().Response.GetTypedHeaders().SetCookie.First(cookie => cookie.Name == "AdminId");
-
-        // Console.WriteLine("Debug:");
-        // Console.WriteLine($"user id: {Context.UserIdentifier}");
     }
 
 
