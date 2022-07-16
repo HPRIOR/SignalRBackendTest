@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using SignalRTestDotNet.GameContextNs;
+using SignalRTestDotNet.Hubs;
 
 namespace SignalRTestDotNet.Middleware;
 
@@ -25,7 +29,7 @@ public class UserConnectMiddleware
 
     private async Task AddUserClaims(string userId, HttpContext context)
     {
-        var claims = new List<Claim>() { new Claim(ClaimTypes.NameIdentifier, userId) };
+        var claims = new List<Claim>() { new (ClaimTypes.NameIdentifier, userId) };
         var identity = new ClaimsIdentity(claims, "CookieAuth");
         ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
         await context.SignInAsync("CookieAuth", claimsPrincipal);
@@ -38,14 +42,16 @@ public class UserConnectMiddleware
      */
     public async Task InvokeAsync(HttpContext context, GameContext gameContext)
     {
-        if (context.Request.Path == "/hub")
+        // must do this during negotiation to for cookie headers to be observed in 
+        // subsequent requests
+        if (context.Request.Path == "/hub/negotiate")
         {
             // handle admin connect request    
             if (!context.Request.Cookies.ContainsKey("AdminId")
                 && !context.Request.Query.ContainsKey("player")
                 && !context.Request.Query.ContainsKey("session"))
             {
-
+                Console.WriteLine("Handling admin join");
                 var adminId = Guid.NewGuid().ToString();
                 var sessionId = Guid.NewGuid().ToString();
 
@@ -57,7 +63,6 @@ public class UserConnectMiddleware
                 // if database save successful return cookies to user
                 context.Response.Cookies.Append("AdminId", adminId);
                 context.Response.Cookies.Append("SessionId", sessionId);
-
                 await AddUserClaims(adminId, context);
             }
 
@@ -66,9 +71,9 @@ public class UserConnectMiddleware
                     && context.Request.Query.ContainsKey("session"))
             {
                 // Assign user claims to player guid
-                // So that use can be 
                 await AddUserClaims(context.Request.Query["player"], context);
             }
+
 
         }
 

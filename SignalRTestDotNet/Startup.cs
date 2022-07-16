@@ -44,17 +44,14 @@ namespace SignalRTestDotNet
             {
                 app.UseDeveloperExceptionPage();
             }
+
             app.UseHttpsRedirection();
             app.UseRouting();
-            app.UseAuthorization();
             app.UseAuthentication();
-
             app.UseMiddleware<UserConnectMiddleware>();
-
             app.UseCors();
-
-
             app.UseRouting();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<ChatHub>("/hub");
