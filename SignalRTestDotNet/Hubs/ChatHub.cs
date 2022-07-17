@@ -17,12 +17,12 @@ public class ChatHub : Hub
         Context.Abort();
     }
 
-    public async Task VerifyPlayerSession(string sessionId, string playerId, string userId)
+    public async Task<bool> VerifyPlayerSession(string sessionId, string playerId, string userId)
     {
         if (playerId != userId)
         {
             await AbortSessionWith("User id does not match player id");
-            return;
+            return false;
         }
 
         var session = await _gameContext.FindAsync<Session>(sessionId);
@@ -31,29 +31,31 @@ public class ChatHub : Hub
         if (session is null || player is null || session.SessionId != player.SessionId)
         {
             await AbortSessionWith("No matching session or player found");
-            return;
+            return false;
         }
 
         Console.WriteLine("player verified");
         await Clients.Caller.SendAsync("verifiedSession", "Player");
+        return true;
     }
 
-    private async Task VerifyAdminSession(String sessionId, string adminId, string userId)
+    private async Task<bool> VerifyAdminSession(String sessionId, string adminId, string userId)
     {
         if (adminId != userId)
         {
             await AbortSessionWith("No matching user id for admin id");
-            return;
+            return false;
         }
 
         var session = await _gameContext.FindAsync<Session>(sessionId);
         if (session is null || session.AdminId != adminId)
         {
             await AbortSessionWith("No matching session for admin");
-            return;
+            return false;
         }
 
         await Clients.Caller.SendAsync("verifiedSession", "Admin");
+        return true;
     }
 
     public override async Task OnConnectedAsync()
@@ -66,14 +68,21 @@ public class ChatHub : Hub
         if (isPlayerSession)
         {
             if (userId != playerQuery) return;
-            await VerifyPlayerSession(sessionQuery, playerQuery, userId);
+            var verified = await VerifyPlayerSession(sessionQuery, playerQuery, userId);
+            if (verified)
+            {
+                await Groups.AddToGroupAsync(Context.UserIdentifier, sessionQuery);
+            }
         }
-        else
+        else // verify admin
         {
 
             var adminCookie = Context.GetHttpContext()?.Request.Cookies["AdminId"];
             var sessionCookie = Context.GetHttpContext()?.Request.Cookies["SessionId"];
-            await VerifyAdminSession(sessionCookie, adminCookie, userId);
+            var verified = await VerifyAdminSession(sessionCookie, adminCookie, userId);
+            if (verified){
+                await Groups.AddToGroupAsync(Context.UserIdentifier, sessionCookie);
+            }
         }
 
         await base.OnConnectedAsync();
