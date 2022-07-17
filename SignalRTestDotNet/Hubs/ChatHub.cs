@@ -71,16 +71,17 @@ public class ChatHub : Hub
             var verified = await VerifyPlayerSession(sessionQuery, playerQuery, userId);
             if (verified)
             {
+                Console.WriteLine("Adding player to group");
                 await Groups.AddToGroupAsync(Context.UserIdentifier, sessionQuery);
             }
         }
         else // verify admin
         {
-
             var adminCookie = Context.GetHttpContext()?.Request.Cookies["AdminId"];
             var sessionCookie = Context.GetHttpContext()?.Request.Cookies["SessionId"];
             var verified = await VerifyAdminSession(sessionCookie, adminCookie, userId);
             if (verified){
+                Console.WriteLine("Adding admin to group");
                 await Groups.AddToGroupAsync(Context.UserIdentifier, sessionCookie);
             }
         }
