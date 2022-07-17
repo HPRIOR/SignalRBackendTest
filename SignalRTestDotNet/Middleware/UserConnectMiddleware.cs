@@ -70,6 +70,7 @@ public class UserConnectMiddleware
             if (context.Request.Query.ContainsKey("player") 
                     && context.Request.Query.ContainsKey("session"))
             {
+                context.Response.Cookies.Append("SessionId", context.Request.Query["session"]);
                 // Assign user claims to player guid
                 await AddUserClaims(context.Request.Query["player"], context);
             }
